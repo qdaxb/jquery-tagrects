@@ -1,0 +1,26 @@
+{
+    "name": "tagrects",
+    "title": "jQuery Tagrects",
+    "description": "jQuery plugin for put the tags in user defined rects.",
+    "keywords": [
+        "tag",
+        "rect"
+    ],
+    "version": "0.0.1",
+    "author": {
+        "name": "Axb",
+        "url": "http://qdaxb.me"
+    },
+    "licenses": [
+        {
+            "type": "GPLv2",
+            "url": "http://opensource.org/licenses/GPL-2.0"
+        }
+    ],
+    "bugs": "http://qdaxb.me/bug/",
+	"demo": "http://qdaxb.me/",
+    "docs": "http://blog.qdaxb.me/jquery-tagrects/",
+    "dependencies": {
+        "jquery": ">=1.5"
+    }
+}

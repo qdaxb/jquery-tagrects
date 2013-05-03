@@ -1,6 +1,7 @@
 (function($) {
-    var rects = new Array() jQuery.fn.extend({
-        tagrect: function(options) {
+    var rects = new Array();
+	jQuery.fn.extend({
+        tagrects: function(options) {
             var defaults = {
                 bold: true,
                 rotate: true,
@@ -146,7 +147,8 @@
                     var tryLeft = Math.random() * 3 + placeNode.left;
                     if (!beenPlace(parent, widget, tryTop, tryLeft, widget.clientHeight + placeNode.top, widget.clientWidth + placeNode.left)) {
                         place(widget, tryTop, tryLeft);
-                        updatePlaceNode(parent, widget, headPlaceNode, placeNode, widget.offsetTop, widget.offsetLeft, widget.clientWidth, widget.clientHeight) return true;
+                        updatePlaceNode(parent, widget, headPlaceNode, placeNode, widget.offsetTop, widget.offsetLeft, widget.clientWidth, widget.clientHeight);
+						return true;
                     } else continue;
                 }
                 place(widget, placeNode.top, placeNode.left);

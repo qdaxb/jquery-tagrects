@@ -1,30 +1,56 @@
+/* 
+jQuery TagRects plugin - written by axb
+Site:qdaxb.me
+E-mail:uaxb@hotmail.com
+ */
 (function($) {
     var rects = new Array();
 	jQuery.fn.extend({
         tagrects: function(options) {
             var defaults = {
-                bold: true,
-                rotate: true,
-                size: {
-                    width: $(document).width(),
-                    height: $(document).height()
-                }
+				rectStyle:{
+					borderStyle:'none',
+					borderColor:'#000000',
+					borderThickness:'0px',
+                    standardWidth: $(document).width(),
+                    standardHeight: $(document).height(),
+					fitWidth:true,
+					fitHeight:true,
+					keepAspectRatio:true,
+					cssClass:''
+				},
+				tagStyle:{
+					fontColor:'#000000',
+					fontWeight:'auto',
+					rotateActiveTag:true,
+					boldActiveTag:true,
+					cssClass:''
+				},
+                rects:[],
+				tags:[],
+				tagFillType:'random',
+				tagFillTryTimes:5,
+				
             };
+			
+			var rectStyle = $.extend(defaults.rectStyle, options.rectStyle);
+			var tagStyle = $.extend(defaults.tagStyle, options.tagStyle);
             var opts = $.extend(defaults, options);
+			opts.rectStyle=rectStyle;
+			opts.tagStyle=tagStyle;
             var optrects = opts.rects;
-            var tagContainer = opts.tagContainer;
             var nodes = {};
-
             for (var i = 0; i < opts.rects.length; i++) {
+				var optRect=optrects[i];
                 var rect = {};
-                rect.start = optrects[i][0];
+                rect.start = optRect[0];
                 rect.start.x = rect.start[0];
                 rect.start.y = rect.start[1];
-                rect.end = optrects[i][1];
+                rect.end = optRect[1];
                 rect.end.x = rect.end[0];
                 rect.end.y = rect.end[1];
-                rect.height = optrects[i][2];
-                addRect(this, rect.start, rect.end, rect.height, opts.size);
+                rect.height = optRect[2];
+                addRect(this, rect.start, rect.end, rect.height, opts.rectStyle);
             }
             for (var i = 0; i < rects.length; i++) {
                 nodes[i] = {
@@ -37,32 +63,49 @@
                     previous: null
                 };
             }
-            $(tagContainer).children().each(function() {
-                $(this).css({
-                    'position': 'fixed'
-                });
+            $(opts.tags).each(function() {
+				$(this).addClass(opts.tagStyle.cssClass);
+				var tagStyle={
+                    'position': 'fixed',
+					'color':opts.tagStyle.fontColor
+                };
+				if(opts.tagStyle.fontWeight!='auto')
+					tagStyle['font-weight']=opts.tagStyle.fontWeight;
+                $(this).css(tagStyle);
                 var flag = false;
-                for (var i = 0; i < rects.length; i++) {
-                    var ran = parseInt(Math.random() * rects.length);
-                    $(this).appendTo($('.tagRect')[ran]);
-                    if (!tryPlace($('.tagRect')[ran], nodes[ran], this)) continue;
-                    flag = true;
-                    break;
-                }
-                if (!flag) $(this).css({
-                    'display': 'none'
-                });
+				if(opts.tagFillType=='random')
+				{
+					for(var i=0;i<opts.tagFillTryTimes;i++){
+						var ran = parseInt(Math.random() * rects.length);
+						if (!tryPlace($('.tagRect')[ran], nodes[ran], this)) continue;
+						$(this).appendTo($('.tagRect')[ran]);
+						flag = true;
+						break;
+					}
+				}
+				else if(opts.tagFillType=='sequence')
+				{
+					for (var i = 0; i < rects.length; i++) {
+						if (!tryPlace($('.tagRect')[i], nodes[i], this)) continue;
+						 $(this).appendTo($('.tagRect')[i]);
+						flag = true;
+						break;
+					}
+				}
+                if (!flag)
+				{
+					$(this).css({
+						'display': 'none'
+					});
+					return;
+				}
             });
-            if (opts.bold) $('.tagRect').children().mouseover(function() {
-                $(this).css({
-                    'font-weight': 'bold'
-                });
+             $('.tagRect').children().mouseover(function() {
+                $(this).css({'font-weight': 'bold'});
             }).mouseout(function() {
-                $(this).css({
-                    'font-weight': 'normal'
-                });
+                $(this).css({'font-weight': 'normal'});
             });
-            if (opts.rotate && $.fn.rotate) $('.tagRect').children().rotate({
+            if (opts.tagStyle.rotateActiveTag && $.fn.rotate) $('.tagRect').children().rotate({
                 bind: {
                     mouseover: function() {
                         $(this).rotate({
@@ -160,14 +203,21 @@
         return false;
     }
 
-    function addRect(parent, startPoint, endPoint, height, definedSize) {
-        var wwidth = $(parent).width();
-        var wheight = $(parent).height();
+    function addRect(parent, startPoint, endPoint, height, rectStyle) {
+        var targetWidthScale = rectStyle.fitWidth?$(parent).width()/rectStyle.standardWidth:1;
+        var targetHeightScale = rectStyle.fitHeight?$(parent).height()/rectStyle.standardHeight:1;
+		if(rectStyle.keepAspectRatio)
+		{
+			if(targetWidthScale>targetHeightScale)
+				targetWidthScale=targetHeightScale;
+			else
+				targetHeightScale=targetWidthScale;
+		}	
         //adjust real points
-        startPoint.x = startPoint.x / definedSize[0] * wwidth;
-        startPoint.y = startPoint.y / definedSize[1] * wheight;
-        endPoint.x = endPoint.x / definedSize[0] * wwidth;
-        endPoint.y = endPoint.y / definedSize[1] * wheight;
+        startPoint.x = startPoint.x * targetWidthScale;
+        startPoint.y = startPoint.y * targetHeightScale;
+        endPoint.x = endPoint.x * targetWidthScale;
+        endPoint.y = endPoint.y * targetHeightScale;
         //calucate edge length and angle
         var edgeX, edgeY, edgeZ, angle;
         edgeX = endPoint.x - startPoint.x;
@@ -179,7 +229,8 @@
         widget.addClass('tagRect');
         var top = (endPoint.y + startPoint.y) / 2;
         var left = ((endPoint.x + startPoint.x) - edgeZ) / 2;
-        widget.css({
+		widget.addClass(rectStyle.cssClass);
+		var widgetStyle={
             'top': top + 'px',
             'left': left + 'px',
             'height': height + 'px',
@@ -189,16 +240,20 @@
             "-webkit-transform": "rotate(" + angle + "deg)",
             "-o-transform": "rotate(" + angle + "deg)",
             "-ms-transform": "rotate(" + angle + "deg)",
-            'position': 'fixed'
-        });
+            'position': 'fixed',
+			'boder-color':rectStyle.borderColor,
+			'border-style':rectStyle.borderStyle,
+			'border-width':rectStyle.borderThickness
+        };
+        widget.css(widgetStyle);
         $(parent).append(widget);
         widget.attr('rotate', angle);
         rects[rects.length] = {
             top: top,
             left: left,
             width: edgeZ,
-            height: 30,
-            angle: -50
+            height: height,
+            angle: 0
         };
     }
 

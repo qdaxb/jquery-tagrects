@@ -30,6 +30,8 @@ E-mail:uaxb@hotmail.com
 				tags:[],
 				tagFillType:'random',
 				tagFillTryTimes:5,
+				minFillHeight:10,
+				minFillWidth:10
 				
             };
 			
@@ -77,7 +79,7 @@ E-mail:uaxb@hotmail.com
 				{
 					for(var i=0;i<opts.tagFillTryTimes;i++){
 						var ran = parseInt(Math.random() * rects.length);
-						if (!tryPlace($('.tagRect')[ran], nodes[ran], this)) continue;
+						if (!tryPlace($('.tagRect')[ran], nodes[ran], this,opts)) continue;
 						$(this).appendTo($('.tagRect')[ran]);
 						flag = true;
 						break;
@@ -86,7 +88,7 @@ E-mail:uaxb@hotmail.com
 				else if(opts.tagFillType=='sequence')
 				{
 					for (var i = 0; i < rects.length; i++) {
-						if (!tryPlace($('.tagRect')[i], nodes[i], this)) continue;
+						if (!tryPlace($('.tagRect')[i], nodes[i], this,opts)) continue;
 						 $(this).appendTo($('.tagRect')[i]);
 						flag = true;
 						break;
@@ -157,21 +159,23 @@ E-mail:uaxb@hotmail.com
             placeNode = placeNode.next;
         }
     }
-    function updatePlaceNode(parent, widget, headPlaceNode, currentNode, top, left, width, height) {
+    function updatePlaceNode(parent, widget, headPlaceNode, currentNode, top, left, width, height,minWidth,minHeight) {
         if (currentNode.mostRight) {
             currentNode.left = left + width + 1;
             currentNode.width = parent.clientWidth - left - width - 1;
         } else {
             if (currentNode.previous != null) currentNode.previous.next = currentNode.next;
             if (currentNode.next != null) currentNode.next.previous = currentNode.previous;
-
+			if((currentNode.width + currentNode.left - left - width>minWidth)&&(currentNode.height>minHeight))
             insertPlaceNode(headPlaceNode, currentNode.top, left + width + 1, currentNode.width + currentNode.left - left - width, currentNode.height);
         }
-        insertPlaceNode(headPlaceNode, 0, left, width, top);
-        insertPlaceNode(headPlaceNode, top + height + 1, left, width, parent.clientHeight - height - top);
+		if((top>minHeight)&&(width>minWidth))
+			insertPlaceNode(headPlaceNode, 0, left, width, top);
+		if((parent.clientHeight - height - top > minHeight)&&(width>minWidth))
+			insertPlaceNode(headPlaceNode, top + height + 1, left, width, parent.clientHeight - height - top);
 
     }
-    function tryPlace(parent, headPlaceNode, widget) {
+    function tryPlace(parent, headPlaceNode, widget,opts) {
         var placeNode = headPlaceNode;
         while (placeNode != null) {
             if (widget.clientHeight > placeNode.height) {
@@ -190,7 +194,7 @@ E-mail:uaxb@hotmail.com
                     var tryLeft = Math.random() * 3 + placeNode.left;
                     if (!beenPlace(parent, widget, tryTop, tryLeft, widget.clientHeight + placeNode.top, widget.clientWidth + placeNode.left)) {
                         place(widget, tryTop, tryLeft);
-                        updatePlaceNode(parent, widget, headPlaceNode, placeNode, widget.offsetTop, widget.offsetLeft, widget.clientWidth, widget.clientHeight);
+                        updatePlaceNode(parent, widget, headPlaceNode, placeNode, widget.offsetTop, widget.offsetLeft, widget.clientWidth, widget.clientHeight,opts.minFillWidth,opts.minFillHeight);
 						return true;
                     } else continue;
                 }
